@@ -66,7 +66,7 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({ onOpenApp }) => {
 
           <button
             onClick={onOpenApp}
-            className="hidden items-center gap-2 rounded-xl bg-[#173D32] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#102C24] dark:bg-[#D7F36B] dark:text-[#102C24] dark:hover:bg-[#C5E552] sm:flex"
+            className="btn-primary hidden items-center gap-2 text-xs py-2 px-4 sm:flex"
           >
             Launch Workspace
             <ArrowRight className="h-3.5 w-3.5" />
@@ -101,7 +101,7 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({ onOpenApp }) => {
                 setMobileMenuOpen(false);
                 onOpenApp();
               }}
-              className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-[#173D32] py-2.5 text-xs font-semibold text-white dark:bg-[#D7F36B] dark:text-[#102C24]"
+              className="btn-primary mt-2 flex items-center justify-center gap-2 text-xs py-2.5"
             >
               Launch Workspace
               <ArrowRight className="h-3.5 w-3.5" />

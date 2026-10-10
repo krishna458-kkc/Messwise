@@ -3,6 +3,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { EnvironmentProvider } from '@/context/EnvironmentContext';
 import { RoleProvider } from '@/context/RoleContext';
 import { AppShell, AppTab } from '@/components/common/AppShell';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
 import { LandingPage } from '@/pages/LandingPage';
 import { CommandCenter } from '@/pages/CommandCenter';
@@ -47,7 +48,11 @@ export function AppContent() {
   };
 
   if (viewMode === 'landing') {
-    return <LandingPage onOpenApp={handleOpenApp} />;
+    return (
+      <ErrorBoundary fallbackTitle="Landing Page Display Issue" onReset={() => window.location.reload()}>
+        <LandingPage onOpenApp={handleOpenApp} />
+      </ErrorBoundary>
+    );
   }
 
   return (
@@ -56,27 +61,35 @@ export function AppContent() {
       onSelectTab={setCurrentTab}
       onExitToLanding={handleExitToLanding}
     >
-      {currentTab === 'dashboard' && <CommandCenter onNavigate={(t) => handleOpenApp(t)} />}
-      {currentTab === 'forecast' && <ForecastLab />}
-      {currentTab === 'kitchen' && <KitchenPage />}
-      {currentTab === 'planner' && <PlannerPage />}
-      {currentTab === 'intelligence' && <WasteIntelligencePage />}
-      {currentTab === 'impact' && <ImpactPage />}
-      {currentTab === 'surplus' && <SurplusRoutingPage />}
-      {currentTab === 'simulator' && <SimulatorPage />}
-      {currentTab === 'reports' && <ReportsPage />}
+      <ErrorBoundary
+        key={currentTab}
+        fallbackTitle={`Unable to Display ${currentTab.toUpperCase()} View`}
+        onReturnHome={() => setCurrentTab('dashboard')}
+      >
+        {currentTab === 'dashboard' && <CommandCenter onNavigate={(t) => handleOpenApp(t)} />}
+        {currentTab === 'forecast' && <ForecastLab />}
+        {currentTab === 'kitchen' && <KitchenPage />}
+        {currentTab === 'planner' && <PlannerPage />}
+        {currentTab === 'intelligence' && <WasteIntelligencePage />}
+        {currentTab === 'impact' && <ImpactPage />}
+        {currentTab === 'surplus' && <SurplusRoutingPage />}
+        {currentTab === 'simulator' && <SimulatorPage />}
+        {currentTab === 'reports' && <ReportsPage />}
+      </ErrorBoundary>
     </AppShell>
   );
 }
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <EnvironmentProvider>
-        <RoleProvider>
-          <AppContent />
-        </RoleProvider>
-      </EnvironmentProvider>
-    </ThemeProvider>
+    <ErrorBoundary fallbackTitle="MessWise System Application Issue">
+      <ThemeProvider>
+        <EnvironmentProvider>
+          <RoleProvider>
+            <AppContent />
+          </RoleProvider>
+        </EnvironmentProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

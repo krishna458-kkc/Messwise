@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useEnvironment } from '@/context/EnvironmentContext';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -6,14 +6,12 @@ import { DataProvenanceBanner } from '@/components/common/DataProvenanceBanner';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { BentoCard } from '@/components/common/BentoCard';
 import { PilotEvidenceReport, AuditEvent } from '@/lib/types';
+import { safeFixed } from '@/lib/formatters';
+import { CountUp } from '@/components/animations/CountUp';
 import {
   FileText,
-  ShieldCheck,
-  Download,
   AlertTriangle,
   RefreshCw,
-  CheckCircle2,
-  Clock,
 } from 'lucide-react';
 
 export const ReportsPage: React.FC = () => {
@@ -29,7 +27,7 @@ export const ReportsPage: React.FC = () => {
   const [pStart, setPStart] = useState<string>('2026-10-05');
   const [pEnd, setPEnd] = useState<string>('2026-10-07');
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -51,11 +49,11 @@ export const ReportsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isSynthetic, bStart, bEnd, pStart, pEnd]);
 
   useEffect(() => {
     loadReports();
-  }, [isSynthetic, bStart, bEnd, pStart, pEnd]);
+  }, [loadReports]);
 
   return (
     <div>
@@ -66,7 +64,7 @@ export const ReportsPage: React.FC = () => {
         actions={
           <button
             onClick={loadReports}
-            className="flex items-center gap-2 rounded-xl bg-[#173D32] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#102C24] dark:bg-[#D7F36B] dark:text-[#102C24]"
+            className="btn-primary flex items-center gap-2 text-xs"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Recalculate E2 Evaluation
@@ -188,7 +186,7 @@ export const ReportsPage: React.FC = () => {
                     Pilot Sample Meals
                   </span>
                   <div className="mt-2 font-display text-3xl font-extrabold text-[var(--text-primary)] tabular-nums">
-                    {report.pilot_meals_count}
+                    <CountUp to={report.pilot_meals_count} />
                   </div>
                   <span className="mt-1 text-[11px] text-stone-500">Post-MessWise deployment</span>
                 </div>
@@ -198,7 +196,7 @@ export const ReportsPage: React.FC = () => {
                     Waste Reduction
                   </span>
                   <div className="mt-2 font-display text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {report.waste_reduction_pct != null ? `${report.waste_reduction_pct.toFixed(1)}%` : '—'}
+                    {report.waste_reduction_pct != null ? `${safeFixed(report.waste_reduction_pct, 1)}%` : '—'}
                   </div>
                   <span className="mt-1 text-[11px] text-stone-500">
                     {report.is_statistically_significant ? 'p < 0.05 (Significant)' : 'Awaiting power'}

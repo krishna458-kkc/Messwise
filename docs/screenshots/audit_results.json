@@ -1,0 +1,178 @@
+[
+  {
+    "page": "landing",
+    "theme": "light",
+    "elementsChecked": 33,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "landing_light.png"
+  },
+  {
+    "page": "landing",
+    "theme": "dark",
+    "elementsChecked": 33,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "landing_dark.png"
+  },
+  {
+    "page": "landing_mobile",
+    "theme": "light",
+    "elementsChecked": 21,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "landing_mobile_light.png"
+  },
+  {
+    "page": "command_center",
+    "theme": "light",
+    "elementsChecked": 81,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "command_center_light.png"
+  },
+  {
+    "page": "command_center",
+    "theme": "dark",
+    "elementsChecked": 81,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "command_center_dark.png"
+  },
+  {
+    "page": "forecast_lab",
+    "theme": "light",
+    "elementsChecked": 71,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "forecast_lab_light.png"
+  },
+  {
+    "page": "forecast_lab",
+    "theme": "dark",
+    "elementsChecked": 71,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "forecast_lab_dark.png"
+  },
+  {
+    "page": "kitchen_logging",
+    "theme": "light",
+    "elementsChecked": 71,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "kitchen_logging_light.png"
+  },
+  {
+    "page": "kitchen_logging",
+    "theme": "dark",
+    "elementsChecked": 71,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "kitchen_logging_dark.png"
+  },
+  {
+    "page": "planner",
+    "theme": "light",
+    "elementsChecked": 105,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "planner_light.png"
+  },
+  {
+    "page": "planner",
+    "theme": "dark",
+    "elementsChecked": 105,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "planner_dark.png"
+  },
+  {
+    "page": "waste_intelligence",
+    "theme": "light",
+    "elementsChecked": 75,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "waste_intelligence_light.png"
+  },
+  {
+    "page": "waste_intelligence",
+    "theme": "dark",
+    "elementsChecked": 75,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "waste_intelligence_dark.png"
+  },
+  {
+    "page": "sustainability",
+    "theme": "light",
+    "elementsChecked": 75,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "sustainability_light.png"
+  },
+  {
+    "page": "sustainability",
+    "theme": "dark",
+    "elementsChecked": 75,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "sustainability_dark.png"
+  },
+  {
+    "page": "surplus_routing",
+    "theme": "light",
+    "elementsChecked": 64,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "surplus_routing_light.png"
+  },
+  {
+    "page": "surplus_routing",
+    "theme": "dark",
+    "elementsChecked": 64,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "surplus_routing_dark.png"
+  },
+  {
+    "page": "simulator",
+    "theme": "light",
+    "elementsChecked": 64,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "simulator_light.png"
+  },
+  {
+    "page": "simulator",
+    "theme": "dark",
+    "elementsChecked": 64,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "simulator_dark.png"
+  },
+  {
+    "page": "reports",
+    "theme": "light",
+    "elementsChecked": 62,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "reports_light.png"
+  },
+  {
+    "page": "reports",
+    "theme": "dark",
+    "elementsChecked": 62,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "reports_dark.png"
+  },
+  {
+    "page": "command_center_tablet",
+    "theme": "light",
+    "elementsChecked": 52,
+    "issuesCount": 0,
+    "issues": [],
+    "screenshot": "command_center_tablet_light.png"
+  }
+]

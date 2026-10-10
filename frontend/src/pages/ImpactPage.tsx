@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useEnvironment } from '@/context/EnvironmentContext';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -7,6 +7,8 @@ import { DataProvenanceBanner } from '@/components/common/DataProvenanceBanner';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { BentoCard } from '@/components/common/BentoCard';
 import { ImpactSummary } from '@/lib/types';
+import { safeFixed } from '@/lib/formatters';
+import { CountUp } from '@/components/animations/CountUp';
 import {
   Leaf,
   Download,
@@ -14,7 +16,6 @@ import {
   ShieldCheck,
   Globe,
   Award,
-  RefreshCw,
 } from 'lucide-react';
 
 export const ImpactPage: React.FC = () => {
@@ -23,7 +24,7 @@ export const ImpactPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadImpact = async () => {
+  const loadImpact = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -35,11 +36,11 @@ export const ImpactPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isSynthetic]);
 
   useEffect(() => {
     loadImpact();
-  }, [isSynthetic]);
+  }, [loadImpact]);
 
   const pdfUrl = api.getImpactPdfUrl(isSynthetic);
 
@@ -54,7 +55,7 @@ export const ImpactPage: React.FC = () => {
             href={pdfUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-xl bg-[#173D32] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#102C24] dark:bg-[#D7F36B] dark:text-[#102C24]"
+            className="btn-primary flex items-center gap-2 text-xs"
           >
             <Download className="h-3.5 w-3.5" />
             Download Green-Campus PDF Report
@@ -101,7 +102,7 @@ export const ImpactPage: React.FC = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               title="Avoided Food Waste"
-              value={data.waste_avoided_kg ? data.waste_avoided_kg.toFixed(1) : '0.0'}
+              value={safeFixed(data.waste_avoided_kg, 1)}
               unit="kg"
               subtitle={`Over ${data.meals_count} meals`}
               icon={Leaf}
@@ -112,9 +113,9 @@ export const ImpactPage: React.FC = () => {
             />
             <KpiCard
               title="Central CO₂e Avoided"
-              value={data.co2e_central_kg ? data.co2e_central_kg.toFixed(1) : '0.0'}
+              value={safeFixed(data.co2e_central_kg, 1)}
               unit="kg CO₂e"
-              subtitle={`Band: [${data.co2e_low_kg?.toFixed(1) || 0} – ${data.co2e_high_kg?.toFixed(1) || 0}]`}
+              subtitle={`Band: [${safeFixed(data.co2e_low_kg, 1)} – ${safeFixed(data.co2e_high_kg, 1)}]`}
               icon={Globe}
               badge={{ text: 'Peer-Reviewed Factors', variant: 'positive' }}
             />
@@ -128,7 +129,7 @@ export const ImpactPage: React.FC = () => {
             />
             <KpiCard
               title="SDG 12.3 Milestone"
-              value={data.sdg_12_3_progress_pct ? data.sdg_12_3_progress_pct.toFixed(1) : '16.8'}
+              value={safeFixed(data.sdg_12_3_progress_pct, 1, '16.8')}
               unit="%"
               subtitle="Halve campus food waste"
               icon={ShieldCheck}
@@ -141,7 +142,7 @@ export const ImpactPage: React.FC = () => {
             <BentoCard className="lg:col-span-8">
               <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#173D32] dark:text-[#D7F36B]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-forest)] dark:text-[var(--brand-lime)]">
                     GHG Emissions Mitigation
                   </span>
                   <h3 className="mt-1 font-display text-xl font-bold text-[var(--text-primary)]">
@@ -163,7 +164,7 @@ export const ImpactPage: React.FC = () => {
                     Conservative (Low: 2.2 kg/kg)
                   </span>
                   <div className="mt-2 font-display text-2xl font-bold text-[var(--text-primary)] tabular-nums">
-                    {data.co2e_low_kg ? data.co2e_low_kg.toFixed(1) : '0.0'} kg
+                    <CountUp to={data.co2e_low_kg || 0} decimals={1} /> kg
                   </div>
                   <span className="mt-1 inline-block text-[10px] text-stone-500">
                     Local vegetarian grain baselines
@@ -174,8 +175,8 @@ export const ImpactPage: React.FC = () => {
                   <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 uppercase">
                     Central Estimate (2.5 kg/kg)
                   </span>
-                  <div className="mt-2 font-display text-3xl font-extrabold text-[#173D32] dark:text-[#D7F36B] tabular-nums">
-                    {data.co2e_central_kg ? data.co2e_central_kg.toFixed(1) : '0.0'} kg
+                  <div className="mt-2 font-display text-3xl font-extrabold text-[var(--brand-forest)] dark:text-[var(--brand-lime)] tabular-nums">
+                    <CountUp to={data.co2e_central_kg || 0} decimals={1} /> kg
                   </div>
                   <span className="mt-1 inline-block text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">
                     Standard institutional dining factor
@@ -187,7 +188,7 @@ export const ImpactPage: React.FC = () => {
                     Upper Bound (High: 3.4 kg/kg)
                   </span>
                   <div className="mt-2 font-display text-2xl font-bold text-[var(--text-primary)] tabular-nums">
-                    {data.co2e_high_kg ? data.co2e_high_kg.toFixed(1) : '0.0'} kg
+                    <CountUp to={data.co2e_high_kg || 0} decimals={1} /> kg
                   </div>
                   <span className="mt-1 inline-block text-[10px] text-stone-500">
                     Dairy & oil intensive preparation
@@ -200,7 +201,7 @@ export const ImpactPage: React.FC = () => {
             <BentoCard className="lg:col-span-4 flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 font-display text-sm font-bold text-[var(--text-primary)]">
-                  <ShieldCheck className="h-4 w-4 text-[#173D32] dark:text-[#D7F36B]" />
+                  <ShieldCheck className="h-4 w-4 text-[var(--brand-forest)] dark:text-[var(--brand-lime)]" />
                   SDG 12.3 Responsible Target
                 </div>
                 <p className="mt-1 text-xs text-[var(--text-secondary)]">
@@ -234,7 +235,7 @@ export const ImpactPage: React.FC = () => {
                   href={pdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#173D32] py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#102C24] dark:bg-[#D7F36B] dark:text-[#102C24]"
+                  className="btn-primary flex w-full items-center justify-center gap-2 text-xs py-2.5"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Generate Executive Audit PDF

@@ -56,7 +56,6 @@ export const KitchenPage: React.FC = () => {
 
   // Helper modals
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
-  const [voiceText, setVoiceText] = useState('');
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
 
   useEffect(() => {
@@ -174,7 +173,7 @@ export const KitchenPage: React.FC = () => {
         is_exam_day: isExamDay,
         is_holiday: isHoliday,
         source: 'manual',
-        is_synthetic: 0, // Operational test entry
+        is_synthetic: isSynthetic, // Respects current operational environment
       });
 
       const newMealId = mealRes.meal.id;
@@ -193,7 +192,7 @@ export const KitchenPage: React.FC = () => {
           unit: row.unit,
           ran_out: row.ran_out ? 1 : 0,
           waste_reason: row.waste_reason,
-          is_synthetic: 0,
+          is_synthetic: isSynthetic,
         });
       }
 
@@ -206,7 +205,7 @@ export const KitchenPage: React.FC = () => {
 
       await refreshSummary();
       // Reload recent meals
-      const mRes = await api.getMeals(0, 5);
+      const mRes = await api.getMeals(isSynthetic, 5);
       setRecentMeals(mRes.meals || []);
     } catch (err: any) {
       console.error('Failed to log meal:', err);
@@ -226,14 +225,14 @@ export const KitchenPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setVoiceModalOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-muted)]"
+              className="btn-secondary flex items-center gap-1.5 text-xs py-1.5 px-3"
             >
               <Mic className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               Voice Logger
             </button>
             <button
               onClick={() => setPhotoModalOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-muted)]"
+              className="btn-secondary flex items-center gap-1.5 text-xs py-1.5 px-3"
             >
               <Camera className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
               Photo Estimate
@@ -496,7 +495,7 @@ export const KitchenPage: React.FC = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center gap-2 rounded-2xl bg-[#173D32] px-8 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#102C24] disabled:opacity-50 dark:bg-[#D7F36B] dark:text-[#102C24]"
+              className="btn-primary text-sm py-3 px-8 flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
               {submitting ? 'Validating & Persisting...' : 'Submit Kitchen Log'}
@@ -533,13 +532,13 @@ export const KitchenPage: React.FC = () => {
             <div className="mt-6 flex justify-end gap-2">
               <button
                 onClick={() => setVoiceModalOpen(false)}
-                className="rounded-xl border border-[var(--border)] px-4 py-2 text-xs font-semibold"
+                className="btn-secondary text-xs py-2 px-4"
               >
                 Cancel
               </button>
               <button
                 onClick={handleVoiceSimulate}
-                className="rounded-xl bg-[#173D32] px-4 py-2 text-xs font-semibold text-white dark:bg-[#D7F36B] dark:text-[#102C24]"
+                className="btn-primary text-xs py-2 px-4"
               >
                 Apply Parsed Quantities
               </button>
@@ -571,7 +570,7 @@ export const KitchenPage: React.FC = () => {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setPhotoModalOpen(false)}
-                className="rounded-xl border border-[var(--border)] px-4 py-2 text-xs font-semibold"
+                className="btn-secondary text-xs py-2 px-4"
               >
                 Close
               </button>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useEnvironment } from '@/context/EnvironmentContext';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -6,6 +6,7 @@ import { DataProvenanceBanner } from '@/components/common/DataProvenanceBanner';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { BentoCard } from '@/components/common/BentoCard';
 import { PlanResponse, DishPlan } from '@/lib/types';
+import { safeFixed } from '@/lib/formatters';
 import {
   Calculator,
   Sliders,
@@ -32,7 +33,7 @@ export const PlannerPage: React.FC = () => {
   const [overrides, setOverrides] = useState<Record<number, { qty: number; reason: string }>>({});
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
 
-  const loadPlan = async (sl = serviceLevel) => {
+  const loadPlan = useCallback(async (sl = serviceLevel) => {
     setLoading(true);
     setError(null);
     setSavedSuccess(false);
@@ -50,11 +51,11 @@ export const PlannerPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date, mealType, isSynthetic, serviceLevel]);
 
   useEffect(() => {
     loadPlan();
-  }, [date, mealType, isSynthetic]);
+  }, [loadPlan]);
 
   const handleServiceLevelChange = (val: number) => {
     setServiceLevel(val);
@@ -82,14 +83,14 @@ export const PlannerPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => loadPlan()}
-              className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-muted)]"
+              className="btn-secondary flex items-center gap-1.5 text-xs py-2 px-3"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Recalculate Plan
             </button>
             <button
               onClick={handleAcceptPlan}
-              className="flex items-center gap-1.5 rounded-xl bg-[#173D32] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#102C24] dark:bg-[#D7F36B] dark:text-[#102C24]"
+              className="btn-primary flex items-center gap-1.5 text-xs"
             >
               <FileCheck className="h-3.5 w-3.5" />
               Confirm & Dispatch Plan
@@ -237,7 +238,7 @@ export const PlannerPage: React.FC = () => {
                 </p>
               </div>
               <span className="text-xs text-stone-500 font-medium">
-                {plan.dishes.length} dishes planned
+                {(plan.dishes || []).length} dishes planned
               </span>
             </div>
 
@@ -256,7 +257,7 @@ export const PlannerPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)]">
-                  {plan.dishes.map((dish) => {
+                  {(plan.dishes || []).map((dish) => {
                     const isOverridden = Boolean(overrides[dish.dish_id]);
                     const currentOverride = overrides[dish.dish_id];
 
@@ -269,26 +270,26 @@ export const PlannerPage: React.FC = () => {
                           {dish.category}
                         </td>
                         <td className="py-3 tabular-nums text-[var(--text-secondary)]">
-                          {dish.per_head_consumption} {dish.unit}/head
+                          {safeFixed(dish.per_head_consumption, 3, '0.100')} {dish.unit}/head
                         </td>
                         <td className="py-3 tabular-nums font-medium text-stone-600 dark:text-stone-300">
-                          {dish.safety_factor.toFixed(2)}x
+                          {safeFixed(dish.safety_factor, 2, '1.05')}x
                         </td>
-                        <td className="py-3 font-bold text-[#173D32] dark:text-[#D7F36B] tabular-nums text-sm">
-                          {dish.planned_qty.toFixed(1)} {dish.unit}
+                        <td className="py-3 font-bold text-[var(--brand-forest)] dark:text-[var(--brand-lime)] tabular-nums text-sm">
+                          {safeFixed(dish.planned_qty, 1, '0.0')} {dish.unit}
                         </td>
                         <td className="py-3 tabular-nums text-[var(--text-secondary)]">
-                          ~{dish.expected_surplus.toFixed(1)} {dish.unit}
+                          ~{safeFixed(dish.expected_surplus, 1, '0.0')} {dish.unit}
                         </td>
                         <td className="py-3">
                           <span
                             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
-                              dish.shortage_risk_pct <= 5
+                              (dish.shortage_risk_pct ?? 5) <= 5
                                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
                                 : 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
                             }`}
                           >
-                            {dish.shortage_risk_pct.toFixed(1)}%
+                            {safeFixed(dish.shortage_risk_pct ?? 5, 1, '5.0')}%
                           </span>
                         </td>
                         <td className="py-3">
@@ -296,12 +297,12 @@ export const PlannerPage: React.FC = () => {
                             <input
                               type="number"
                               step="0.5"
-                              placeholder={dish.planned_qty.toFixed(1)}
+                              placeholder={safeFixed(dish.planned_qty, 1, '0.0')}
                               value={currentOverride ? currentOverride.qty : ''}
                               onChange={(e) =>
                                 handleOverride(
                                   dish.dish_id,
-                                  parseFloat(e.target.value) || dish.planned_qty,
+                                  parseFloat(e.target.value) || (dish.planned_qty ?? 0),
                                   currentOverride?.reason || 'Chef Experience'
                                 )
                               }

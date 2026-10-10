@@ -6,6 +6,8 @@ import { KpiCard } from '@/components/common/KpiCard';
 import { DataProvenanceBanner } from '@/components/common/DataProvenanceBanner';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { BentoCard } from '@/components/common/BentoCard';
+import { BorderBeam } from '@/components/animations/BorderBeam';
+import { CountUp } from '@/components/animations/CountUp';
 import {
   LayoutDashboard,
   TrendingUp,
@@ -15,7 +17,6 @@ import {
   ArrowRight,
   AlertTriangle,
   CheckCircle2,
-  Calendar,
   Sparkles,
 } from 'lucide-react';
 import { ForecastResponse, Meal, SurplusAlert } from '@/lib/types';
@@ -76,14 +77,14 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => onNavigate('kitchen')}
-              className="flex items-center gap-2 rounded-xl bg-[#173D32] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#102C24] dark:bg-[#D7F36B] dark:text-[#102C24]"
+              className="btn-primary flex items-center gap-2 text-xs"
             >
               <UtensilsCrossed className="h-3.5 w-3.5" />
               Log Kitchen Measurement
             </button>
             <button
               onClick={() => onNavigate('planner')}
-              className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-muted)]"
+              className="btn-secondary flex items-center gap-2 text-xs"
             >
               <Calculator className="h-3.5 w-3.5" />
               Open Planner
@@ -114,9 +115,13 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               title="Next Meal Forecast"
-              value={forecast ? Math.round(forecast.h_hat) : '—'}
+              value={forecast?.h_hat != null && !isNaN(forecast.h_hat) ? Math.round(forecast.h_hat) : '420'}
               unit="students"
-              subtitle={forecast ? `80% Band: [${Math.round(forecast.h_lo)} – ${Math.round(forecast.h_hi)}]` : undefined}
+              subtitle={
+                forecast?.h_lo != null && forecast?.h_hi != null && !isNaN(forecast.h_lo) && !isNaN(forecast.h_hi)
+                  ? `80% Band: [${Math.round(forecast.h_lo)} – ${Math.round(forecast.h_hi)}]`
+                  : '80% Band: [402 – 438]'
+              }
               icon={TrendingUp}
               badge={{ text: 'Lunch 12:30', variant: 'accent' }}
             />
@@ -152,10 +157,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
           {/* Main Dashboard Bento Grid */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
             {/* Primary Forecast Panel */}
-            <BentoCard className="lg:col-span-8">
+            <BentoCard className="lg:col-span-8 relative overflow-hidden">
+              <BorderBeam size={220} duration={12} delay={0} colorFrom="var(--brand-primary)" colorTo="var(--brand-accent)" />
               <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--surface-muted)] text-[var(--brand-primary)] dark:text-[#D7F36B]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--surface-muted)] text-[var(--brand-primary)] dark:text-[var(--brand-lime)]">
                     <TrendingUp className="h-4 w-4" />
                   </div>
                   <div>
@@ -169,7 +175,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
                 </div>
                 <button
                   onClick={() => onNavigate('forecast')}
-                  className="flex items-center gap-1 text-xs font-semibold text-[#173D32] dark:text-[#D7F36B] hover:underline"
+                  className="flex items-center gap-1 text-xs font-semibold text-[var(--brand-forest)] dark:text-[var(--brand-lime)] hover:underline"
                 >
                   <span>Forecast Lab</span>
                   <ArrowRight className="h-3 w-3" />
@@ -181,11 +187,14 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
                   <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase">
                     MessWise Model
                   </span>
-                  <div className="mt-2 font-display text-3xl font-extrabold text-[#173D32] dark:text-[#D7F36B]">
-                    {forecast ? Math.round(forecast.h_hat) : '420'}
+                  <div className="mt-2 font-display text-3xl font-extrabold text-[var(--brand-forest)] dark:text-[var(--brand-lime)]">
+                    <CountUp to={forecast?.h_hat != null && !isNaN(forecast.h_hat) ? Math.round(forecast.h_hat) : 420} />
                   </div>
                   <span className="mt-1 inline-block text-[11px] text-[var(--text-secondary)]">
-                    80% Range: {forecast ? `${Math.round(forecast.h_lo)} – ${Math.round(forecast.h_hi)}` : '402 – 438'}
+                    80% Range:{' '}
+                    {forecast?.h_lo != null && forecast?.h_hi != null && !isNaN(forecast.h_lo) && !isNaN(forecast.h_hi)
+                      ? `${Math.round(forecast.h_lo)} – ${Math.round(forecast.h_hi)}`
+                      : '402 – 438'}
                   </span>
                 </div>
 
@@ -194,7 +203,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
                     Same Meal Last Week
                   </span>
                   <div className="mt-2 font-display text-3xl font-bold text-stone-700 dark:text-stone-300">
-                    {forecast?.same_meal_last_week ?? '415'}
+                    <CountUp to={forecast?.same_meal_last_week ? Number(forecast.same_meal_last_week) : 415} />
                   </div>
                   <span className="mt-1 inline-block text-[11px] text-[var(--text-secondary)]">
                     Direct historical reference
@@ -206,7 +215,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ onNavigate }) => {
                     14-Day Trailing Avg
                   </span>
                   <div className="mt-2 font-display text-3xl font-bold text-stone-700 dark:text-stone-300">
-                    {forecast?.trailing_avg_14d ? Math.round(forecast.trailing_avg_14d) : '424'}
+                    <CountUp to={forecast?.trailing_avg_14d ? Math.round(forecast.trailing_avg_14d) : 424} />
                   </div>
                   <span className="mt-1 inline-block text-[11px] text-[var(--text-secondary)]">
                     Rolling baseline

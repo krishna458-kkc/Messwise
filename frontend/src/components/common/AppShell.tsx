@@ -17,8 +17,6 @@ import {
   Sun,
   Moon,
   ExternalLink,
-  ShieldCheck,
-  Globe,
   Database,
   Menu,
   X,
@@ -49,7 +47,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   children,
 }) => {
   const { theme, toggleTheme } = useTheme();
-  const { isSynthetic, setIsSynthetic, summary, isVerifiedPilot, isUnverifiedTest, badgeLabel } = useEnvironment();
+  const { isSynthetic, setIsSynthetic, isVerifiedPilot, badgeLabel } = useEnvironment();
   const { role, setRole, language, setLanguage } = useRole();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);

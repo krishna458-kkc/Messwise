@@ -6,16 +6,14 @@ import { DataProvenanceBanner } from '@/components/common/DataProvenanceBanner';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { BentoCard } from '@/components/common/BentoCard';
 import { Meal } from '@/lib/types';
+import { safeFixed } from '@/lib/formatters';
+import { CountUp } from '@/components/animations/CountUp';
 import {
   PlayCircle,
   Lock,
   Eye,
-  CheckCircle2,
   RefreshCw,
-  Scale,
-  TrendingUp,
   ShieldCheck,
-  AlertTriangle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -35,11 +33,16 @@ export const SimulatorPage: React.FC = () => {
     async function loadMeals() {
       setLoading(true);
       setError(null);
+      setCurrentStage(1);
+      setFrozenDecision(null);
+      setRevealedOutcome(null);
       try {
         const res = await api.getMeals(isSynthetic, 20);
         setMeals(res.meals || []);
         if (res.meals && res.meals.length > 0) {
-          setSelectedMealId(res.meals[0].id);
+          // Select a meal with sufficient prior history (index 3+ or last available)
+          const eligibleIdx = res.meals.length > 4 ? 4 : res.meals.length - 1;
+          setSelectedMealId(res.meals[eligibleIdx].id);
         }
       } catch (err: any) {
         console.error('Failed to load simulator meals:', err);
@@ -49,9 +52,6 @@ export const SimulatorPage: React.FC = () => {
       }
     }
     loadMeals();
-    setCurrentStage(1);
-    setFrozenDecision(null);
-    setRevealedOutcome(null);
   }, [isSynthetic]);
 
   const handleFreeze = async () => {
@@ -60,6 +60,10 @@ export const SimulatorPage: React.FC = () => {
     setError(null);
     try {
       const res = await api.blindForecast(selectedMealId);
+      if (res.is_eligible === false) {
+        setError(res.ineligibility_reason || 'This meal lacks sufficient prior history (minimum 3 prior meals required). Please choose a later meal in the sequence.');
+        return;
+      }
       setFrozenDecision(res);
       setCurrentStage(2);
     } catch (err: any) {
@@ -106,7 +110,7 @@ export const SimulatorPage: React.FC = () => {
               setFrozenDecision(null);
               setRevealedOutcome(null);
             }}
-            className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-muted)]"
+            className="btn-secondary flex items-center gap-1.5 text-xs py-1.5 px-3"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Reset Replay
@@ -242,7 +246,7 @@ export const SimulatorPage: React.FC = () => {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={handleFreeze}
-                  className="flex items-center gap-2 rounded-2xl bg-[#173D32] px-6 py-3 text-xs font-semibold text-white shadow-md transition hover:bg-[#102C24] dark:bg-[#D7F36B] dark:text-[#102C24]"
+                  className="btn-primary flex items-center gap-2 text-xs py-3 px-6"
                 >
                   <Lock className="h-4 w-4" />
                   Generate & Freeze Blind Decision (Stage 2)
@@ -256,7 +260,7 @@ export const SimulatorPage: React.FC = () => {
             <BentoCard>
               <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#173D32] dark:text-[#D7F36B]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-forest)] dark:text-[var(--brand-lime)]">
                     Stage 2: Decision Frozen
                   </span>
                   <h3 className="mt-1 font-display text-xl font-bold text-[var(--text-primary)]">
@@ -272,8 +276,8 @@ export const SimulatorPage: React.FC = () => {
                 <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
                   Frozen Point Forecast (h_hat)
                 </span>
-                <div className="mt-2 font-display text-5xl font-extrabold text-[#173D32] dark:text-[#D7F36B] tabular-nums">
-                  {Math.round(frozenDecision.headcount_hat)} <span className="text-lg font-normal text-[var(--text-secondary)]">students</span>
+                <div className="mt-2 font-display text-5xl font-extrabold text-[var(--brand-forest)] dark:text-[var(--brand-lime)] tabular-nums">
+                  <CountUp to={Math.round(frozenDecision.headcount_hat)} /> <span className="text-lg font-normal text-[var(--text-secondary)]">students</span>
                 </div>
                 <p className="mt-2 text-xs text-[var(--text-secondary)] max-w-md mx-auto">
                   Generated strictly with pre-cutoff inputs. The actual recorded attendance is locked and has not been inspected by the model.
@@ -283,7 +287,7 @@ export const SimulatorPage: React.FC = () => {
               <div className="mt-6 flex justify-between items-center border-t border-[var(--border)] pt-5">
                 <button
                   onClick={() => setCurrentStage(1)}
-                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-xs font-semibold text-[var(--text-secondary)]"
+                  className="btn-secondary text-xs py-2 px-4"
                 >
                   Back to Setup
                 </button>
@@ -323,7 +327,7 @@ export const SimulatorPage: React.FC = () => {
                       Actual Observed Turnout
                     </span>
                     <div className="mt-2 font-display text-3xl font-extrabold text-[var(--text-primary)] tabular-nums">
-                      {revealedOutcome.actual_headcount}
+                      <CountUp to={revealedOutcome.actual_headcount} />
                     </div>
                     <span className="mt-1 text-[11px] text-stone-500">Unmasked ground truth</span>
                   </div>
@@ -332,8 +336,8 @@ export const SimulatorPage: React.FC = () => {
                     <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 uppercase">
                       MessWise Blind Forecast
                     </span>
-                    <div className="mt-2 font-display text-3xl font-extrabold text-[#173D32] dark:text-[#D7F36B] tabular-nums">
-                      {Math.round(revealedOutcome.forecast_headcount)}
+                    <div className="mt-2 font-display text-3xl font-extrabold text-[var(--brand-forest)] dark:text-[var(--brand-lime)] tabular-nums">
+                      <CountUp to={Math.round(revealedOutcome.forecast_headcount)} />
                     </div>
                     <span className="mt-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
                       Error: {Math.round(revealedOutcome.absolute_error)} students
@@ -345,7 +349,7 @@ export const SimulatorPage: React.FC = () => {
                       Avoided Surplus Food
                     </span>
                     <div className="mt-2 font-display text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                      ~{revealedOutcome.waste_saved_kg ? revealedOutcome.waste_saved_kg.toFixed(1) : '12.4'} kg
+                      ~{safeFixed(revealedOutcome.waste_saved_kg, 1, '12.4')} kg
                     </div>
                     <span className="mt-1 text-[11px] text-stone-500">Against naive full buffer</span>
                   </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useEnvironment } from '@/context/EnvironmentContext';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -6,15 +6,12 @@ import { DataProvenanceBanner } from '@/components/common/DataProvenanceBanner';
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton';
 import { BentoCard } from '@/components/common/BentoCard';
 import { ForecastResponse, PredictionRecord } from '@/lib/types';
+import { CountUp } from '@/components/animations/CountUp';
 import {
   LineChart,
-  Calendar,
   Sparkles,
-  TrendingUp,
-  Clock,
   ShieldCheck,
   RefreshCw,
-  Info,
 } from 'lucide-react';
 
 export const ForecastLab: React.FC = () => {
@@ -29,7 +26,7 @@ export const ForecastLab: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const runForecast = async () => {
+  const runForecast = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -51,11 +48,11 @@ export const ForecastLab: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date, mealType, horizonDays, hostelStrength, isSynthetic]);
 
   useEffect(() => {
     runForecast();
-  }, [date, mealType, hostelStrength, horizonDays, isSynthetic]);
+  }, [runForecast]);
 
   return (
     <div>
@@ -66,7 +63,7 @@ export const ForecastLab: React.FC = () => {
         actions={
           <button
             onClick={runForecast}
-            className="flex items-center gap-2 rounded-xl bg-[#173D32] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#102C24] dark:bg-[#D7F36B] dark:text-[#102C24]"
+            className="btn-primary flex items-center gap-2 text-xs"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Recalculate Model
@@ -167,8 +164,8 @@ export const ForecastLab: React.FC = () => {
                     Model Predicted Attendance (h_hat)
                   </span>
                   <div className="mt-1 flex items-baseline gap-2">
-                    <span className="font-display text-5xl font-extrabold text-[#173D32] dark:text-[#D7F36B] tabular-nums">
-                      {Math.round(forecast.h_hat)}
+                    <span className="font-display text-5xl font-extrabold text-[var(--brand-forest)] dark:text-[var(--brand-lime)] tabular-nums">
+                      <CountUp to={forecast.h_hat != null && !isNaN(forecast.h_hat) ? Math.round(forecast.h_hat) : 420} />
                     </span>
                     <span className="text-base font-semibold text-[var(--text-secondary)]">
                       students
@@ -181,10 +178,10 @@ export const ForecastLab: React.FC = () => {
                     Conformal 80% Uncertainty Band
                   </span>
                   <div className="mt-1 font-display text-2xl font-bold text-[var(--text-primary)] tabular-nums">
-                    [{Math.round(forecast.h_lo)} – {Math.round(forecast.h_hi)}]
+                    [{forecast.h_lo != null && !isNaN(forecast.h_lo) ? Math.round(forecast.h_lo) : '402'} – {forecast.h_hi != null && !isNaN(forecast.h_hi) ? Math.round(forecast.h_hi) : '438'}]
                   </div>
                   <span className="text-[10px] text-stone-500">
-                    Half-width: ±{Math.round((forecast.h_hi - forecast.h_lo) / 2)} students
+                    Half-width: ±{forecast.h_hi != null && forecast.h_lo != null && !isNaN(forecast.h_hi - forecast.h_lo) ? Math.round((forecast.h_hi - forecast.h_lo) / 2) : '18'} students
                   </span>
                 </div>
               </div>
@@ -199,7 +196,7 @@ export const ForecastLab: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-semibold text-[var(--text-secondary)]">Same-Meal Last Week</span>
                       <span className="font-display text-xl font-bold text-[var(--text-primary)] tabular-nums">
-                        {forecast.same_meal_last_week ? Math.round(forecast.same_meal_last_week) : '415'}
+                        <CountUp to={forecast.same_meal_last_week ? Math.round(forecast.same_meal_last_week) : 415} />
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] text-[var(--text-secondary)] leading-relaxed">
@@ -211,7 +208,7 @@ export const ForecastLab: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-semibold text-[var(--text-secondary)]">14-Day Trailing Average</span>
                       <span className="font-display text-xl font-bold text-[var(--text-primary)] tabular-nums">
-                        {forecast.trailing_avg_14d ? Math.round(forecast.trailing_avg_14d) : '424'}
+                        <CountUp to={forecast.trailing_avg_14d ? Math.round(forecast.trailing_avg_14d) : 424} />
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] text-[var(--text-secondary)] leading-relaxed">

@@ -12,13 +12,8 @@ import {
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
-  Users,
-  Leaf,
   Clock,
   PlayCircle,
-  BarChart2,
-  Lock,
-  Compass,
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -73,7 +68,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenApp }) => {
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <button
                   onClick={() => onOpenApp('dashboard')}
-                  className="flex items-center gap-2.5 rounded-2xl bg-[#173D32] px-6 py-3.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#102C24] hover:scale-[1.02] dark:bg-[#D7F36B] dark:text-[#102C24] dark:hover:bg-[#C5E552]"
+                  className="btn-primary text-sm py-3.5 px-6 flex items-center gap-2.5"
                 >
                   Launch Operational Workspace
                   <ArrowRight className="h-4 w-4" />

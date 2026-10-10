@@ -24,7 +24,7 @@ export const StaggerText: React.FC<StaggerTextProps> = ({
   }
 
   const container = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 1 },
     visible: (i = 1) => ({
       opacity: 1,
       transition: { staggerChildren: staggerDuration, delayChildren: delay * i },
@@ -35,17 +35,15 @@ export const StaggerText: React.FC<StaggerTextProps> = ({
     visible: {
       opacity: 1,
       y: 0,
-      filter: 'blur(0px)',
       transition: {
         type: 'spring' as const,
-        damping: 15,
-        stiffness: 100,
+        damping: 20,
+        stiffness: 120,
       },
     },
     hidden: {
-      opacity: 0,
-      y: 12,
-      filter: 'blur(4px)',
+      opacity: 0.95,
+      y: 6,
     },
   };
 
@@ -60,7 +58,7 @@ export const StaggerText: React.FC<StaggerTextProps> = ({
       {words.map((word, index) => (
         <motion.span
           key={`${word}-${index}`}
-          className="inline-block mr-1.5 last:mr-0"
+          className="inline-block mr-1.5 last:mr-0 text-inherit"
           variants={child}
         >
           {word}

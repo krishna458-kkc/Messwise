@@ -318,3 +318,43 @@ def test_d7_weekly_operational_brief(memory_db):
     assert "demonstration data notice" in brief.data_quality_warning.lower()
     assert len(brief.brief_narrative) > 50
 
+
+def test_compute_kpi_summary_prediction_abs_error_regression(memory_db):
+    """Regression test: Ensure compute_kpi_summary accesses Prediction.abs_error properly
+
+    Guarantees no AttributeError occurs on evaluated predictions with actual_headcount.
+    """
+    from messwise.db import Prediction
+
+    # Add meal and evaluated prediction records
+    meal = Meal(date="2026-10-01", meal_type="lunch", headcount=380, hostel_strength=500, is_synthetic=1)
+    pred1 = Prediction(
+        meal_date="2026-10-01",
+        meal_type="lunch",
+        h_hat=400.0,
+        h_lo=380.0,
+        h_hi=420.0,
+        actual_headcount=380,
+        abs_error=20.0,
+        is_synthetic=1,
+    )
+    pred2 = Prediction(
+        meal_date="2026-10-02",
+        meal_type="lunch",
+        h_hat=410.0,
+        h_lo=390.0,
+        h_hi=430.0,
+        actual_headcount=415,
+        abs_error=5.0,
+        is_synthetic=1,
+    )
+    memory_db.add_all([meal, pred1, pred2])
+    memory_db.commit()
+
+    kpis = compute_kpi_summary(session=memory_db, is_synthetic=1)
+    assert kpis.forecast_eval_count == 2
+    assert kpis.forecast_mae == 12.5  # mean(20, 5)
+    assert kpis.forecast_wape is not None
+    assert round(kpis.forecast_wape, 3) == round(25.0 / 795.0, 3)
+
+
