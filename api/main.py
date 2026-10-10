@@ -53,8 +53,33 @@ from messwise.validation import (
     MealCreate,
 )
 
+from starlette.requests import Request
+
 # Initialize DB tables on startup
 init_db()
+
+
+def _auto_seed_if_empty() -> None:
+    """Ensure database has demonstration synthetic data on fresh cloud deployment."""
+    try:
+        session_factory = get_session_factory()
+        with session_factory() as session:
+            count = session.query(Meal).count()
+            if count == 0:
+                from scripts.synth_data import generate_synthetic_dataset, populate_database_with_synthetic
+                start_dt = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
+                meals, dish_logs = generate_synthetic_dataset(
+                    days=14,
+                    start_date=start_dt,
+                    hostel_strength=500,
+                )
+                populate_database_with_synthetic(meals, dish_logs)
+    except Exception as e:
+        # Non-blocking log if migration or synthetic generation fails
+        print(f"[MessWise] Auto-seed notification: {e}")
+
+
+_auto_seed_if_empty()
 
 
 def get_db_session():
@@ -65,6 +90,7 @@ def get_db_session():
         yield session
     finally:
         session.close()
+
 
 app = FastAPI(
     title="MessWise API",
@@ -78,7 +104,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Enable CORS for local development
+# Enable CORS for local and production deployments
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -86,6 +112,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def handle_api_prefix(request: Request, call_next):
+    """Normalize requests whether routed with or without /api prefix."""
+    path = request.scope.get("path", "")
+    if path.startswith("/api/"):
+        request.scope["path"] = path[4:]
+    elif path == "/api":
+        request.scope["path"] = "/"
+    return await call_next(request)
+
+
+@app.get("/", tags=["System"])
+def root_service_info() -> Dict[str, Any]:
+    """Root service information endpoint."""
+    return {
+        "status": "healthy",
+        "app": "MessWise API",
+        "version": "0.1.0",
+        "docs": "/docs",
+        "health": "/health",
+    }
 
 
 @app.get("/health", tags=["System"])
