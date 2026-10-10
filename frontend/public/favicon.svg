@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <circle cx="24" cy="24" r="22" fill="#173D32" />
+  <!-- Plate / Food loop -->
+  <circle cx="24" cy="24" r="14" stroke="#D7F36B" stroke-width="2.5" stroke-dasharray="70 20" stroke-linecap="round" />
+  <!-- Inner leaf / demand curve -->
+  <path d="M16 28C16 28 20 18 30 16C32 24 24 32 16 28Z" fill="#D7F36B" opacity="0.9" />
+  <path d="M19 25C22 22 25 20 29 18" stroke="#173D32" stroke-width="2" stroke-linecap="round" />
+  <!-- Indicator dot -->
+  <circle cx="32" cy="18" r="3" fill="#D7F36B" />
+</svg>

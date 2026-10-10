@@ -218,3 +218,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+*.backup*
+*.bak
+
+# Frontend & Node
+node_modules/
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Scratch & temporary exports
+scratch/
