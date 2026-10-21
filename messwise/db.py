@@ -712,20 +712,40 @@ _DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "messwise.d
 
 
 def get_default_db_url() -> str:
-    """Resolve database URL from environment or fallback to local SQLite."""
+    """Resolve database URL from environment (DATABASE_URL, MESSWISE_DB_PATH) or fallback to local SQLite."""
+    # Check DATABASE_URL first (standard for Render PostgreSQL, Neon, Supabase)
+    database_url = os.getenv("DATABASE_URL")
+    if database_url and database_url.strip():
+        url = database_url.strip()
+        # Render and legacy Heroku provide postgres:// URIs, normalize to postgresql:// for SQLAlchemy >= 1.4
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        return url
+
     custom_path = os.getenv("MESSWISE_DB_PATH")
-    if custom_path:
-        return f"sqlite:///{custom_path}"
+    if custom_path and custom_path.strip():
+        cp = custom_path.strip()
+        if "://" in cp:
+            return cp
+        Path(cp).resolve().parent.mkdir(parents=True, exist_ok=True)
+        return f"sqlite:///{cp}"
+
     _DEFAULT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     return f"sqlite:///{_DEFAULT_DB_PATH}"
 
 
 def get_engine(db_url: Optional[str] = None) -> Engine:
-    """Create or return a SQLAlchemy engine."""
+    """Create or return a SQLAlchemy engine with connection pool pre-ping."""
     url = db_url or get_default_db_url()
+    if "sqlite" in url:
+        return create_engine(
+            url,
+            connect_args={"check_same_thread": False},
+            echo=False,
+        )
     return create_engine(
         url,
-        connect_args={"check_same_thread": False} if "sqlite" in url else {},
+        pool_pre_ping=True,
         echo=False,
     )
 
@@ -739,9 +759,11 @@ def get_session_factory(engine: Optional[Engine] = None) -> sessionmaker[Session
 def migrate_db(engine: Engine) -> None:
     """Idempotently add new columns to SQLite tables if they do not already exist, and create new tables."""
     try:
-        with engine.connect() as conn:
-            # 1. Meals table
-            cursor_m = conn.execute(text("PRAGMA table_info(meals)"))
+        # SQLite-specific column additions via PRAGMA table_info
+        if engine.dialect.name == "sqlite":
+            with engine.connect() as conn:
+                # 1. Meals table
+                cursor_m = conn.execute(text("PRAGMA table_info(meals)"))
             meal_cols = {row[1] for row in cursor_m.fetchall()}
             if meal_cols:
                 if "verification_status" not in meal_cols:

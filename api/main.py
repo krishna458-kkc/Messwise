@@ -7,6 +7,7 @@ Shares the exact same validation and database logic as the Streamlit app.
 
 from __future__ import annotations
 
+import os
 import sys
 from dataclasses import asdict
 from datetime import datetime, timedelta
@@ -20,7 +21,7 @@ if str(BASE_DIR) not in sys.path:
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from messwise.db import (
@@ -59,8 +60,18 @@ from starlette.requests import Request
 init_db()
 
 
+def _is_auto_seed_enabled() -> bool:
+    """Check if synthetic auto-seeding is enabled via AUTO_SEED_SYNTHETIC env var."""
+    val = os.getenv("AUTO_SEED_SYNTHETIC", "true").strip().lower()
+    return val not in ("false", "0", "no", "off")
+
+
 def _auto_seed_if_empty() -> None:
-    """Ensure database has demonstration synthetic data on fresh cloud deployment."""
+    """Ensure database has demonstration synthetic data on fresh cloud deployment if enabled."""
+    if not _is_auto_seed_enabled():
+        print("[MessWise] Automatic synthetic demonstration seeding is disabled (AUTO_SEED_SYNTHETIC=false).")
+        return
+
     try:
         session_factory = get_session_factory()
         with session_factory() as session:
@@ -104,14 +115,41 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Enable CORS for local and production deployments
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Configure production CORS with environment variable support & Vercel domain matching
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+if cors_origins_env.strip():
+    allowed_origins = [orig.strip() for orig in cors_origins_env.split(",") if orig.strip()]
+else:
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8501",
+        "http://127.0.0.1:8501",
+    ]
+
+cors_origin_regex = os.getenv("CORS_ORIGIN_REGEX", r"^https:\/\/.*\.vercel\.app$")
+
+if "*" in allowed_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_origin_regex=cors_origin_regex,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
 
 
 @app.middleware("http")
@@ -139,9 +177,18 @@ def root_service_info() -> Dict[str, Any]:
 
 @app.get("/health", tags=["System"])
 def health_check() -> Dict[str, Any]:
-    """Health check endpoint confirming service status and phase."""
+    """Health check endpoint confirming service status and database connectivity."""
+    db_status = "connected"
+    try:
+        session_factory = get_session_factory()
+        with session_factory() as session:
+            session.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"degraded: {str(e)}"
+
     return {
-        "status": "healthy",
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "database": db_status,
         "app": "MessWise",
         "version": "0.1.0",
         "phase": 1,
@@ -1437,7 +1484,8 @@ def get_reports_audit_events_endpoint(
     }
 
 
-
-
-
-
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8000))
+    host = os.getenv("HOST", "0.0.0.0")
+    uvicorn.run("api.main:app", host=host, port=port, reload=False)

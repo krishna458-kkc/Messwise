@@ -18,8 +18,12 @@ import {
   PilotEvidenceReport,
 } from './types';
 
-// API base URL defaults to Vite proxy '/api' or configurable environment variable
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+// API base URL defaults to VITE_API_URL, VITE_API_BASE_URL, or Vite proxy '/api'
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  '/api'
+).replace(/\/+$/, '');
 
 class ApiClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

@@ -155,9 +155,20 @@ python -m streamlit run app/Home.py --server.port 8501
 
 ### 4. Run Automated Tests
 ```bash
-# Python backend & integrity test suite (247 passing tests)
+# Python backend & integrity test suite (248 passing tests)
 pytest tests/ -v
 
 # React frontend build & typecheck
 cd frontend && npm run build
 ```
+
+---
+
+## 🌐 Production Deployment (Vercel + Render)
+
+MessWise is configured for cloud production deployment:
+- **Frontend (Vercel):** React + Vite SPA. Set Root Directory to `frontend`, output to `dist`, and define `VITE_API_URL`.
+- **Backend (Render):** FastAPI service. Auto-configured via [`render.yaml`](render.yaml) with `/health` check and CORS regex.
+- **Database:** Fully supports both PostgreSQL (via `DATABASE_URL`) and persistent SQLite (via `MESSWISE_DB_PATH`). Includes safe non-destructive migration utility [`scripts/migrate_to_postgres.py`](scripts/migrate_to_postgres.py).
+
+See the complete step-by-step instructions in [`DEPLOYMENT.md`](DEPLOYMENT.md).
